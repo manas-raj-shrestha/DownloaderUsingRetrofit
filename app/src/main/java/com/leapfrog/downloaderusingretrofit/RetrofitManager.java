@@ -27,6 +27,11 @@ public class RetrofitManager {
     public static Retrofit retrofit = null;
     public static RetrofitApi iVayooService = null;
     public static RetrofitManager retrofitManager = null;
+    private ProgressListener progressListener;
+
+    public void setProgressListener(ProgressListener progressListener){
+        this.progressListener = progressListener;
+    }
 
     private RetrofitManager() {
 
@@ -75,15 +80,15 @@ public class RetrofitManager {
         return okHttpClient;
     }
 
-    final ProgressListener progressListener = new ProgressListener() {
-        @Override
-        public void update(long bytesRead, long contentLength, boolean done) {
-            System.out.println(bytesRead);
-            System.out.println(contentLength);
-            System.out.println(done);
-            System.out.format("%d%% done\n", (100 * bytesRead) / contentLength);
-        }
-    };
+//    final ProgressListener progressListener = new ProgressListener() {
+//        @Override
+//        public void update(long bytesRead, long contentLength, boolean done) {
+//            System.out.println(bytesRead);
+//            System.out.println(contentLength);
+//            System.out.println(done);
+//            System.out.format("%d%% done\n", (100 * bytesRead) / contentLength);
+//        }
+//    };
 
     private static class ProgressResponseBody extends ResponseBody {
 

@@ -1,6 +1,7 @@
 package com.leapfrog.downloaderusingretrofit;
 
 import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
@@ -23,11 +24,16 @@ import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ProgressListener {
 
     Button btnGetFile;
     String[] downloadFilesQueue = new String[]{"sample1.mp4", "sample2.mp4", "sample3.mp4", "sample4.mp4"};
     ArrayList<String> downloadFilesArryList = new ArrayList<>();
+    ArrayList<Integer> progressList = new ArrayList<>();
+    ArrayList<DownloadModel> downloadModels = new ArrayList<>();
+
+    NotificationCompat.Builder mBuilder;
+    NotificationManager mNotifyMgr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,38 +46,53 @@ public class MainActivity extends AppCompatActivity {
         downloadFilesArryList.add("sample2.mp4");
         downloadFilesArryList.add("sample3.mp4");
         downloadFilesArryList.add("sample4.mp4");
-
+        RetrofitManager.getInstance().setProgressListener(this);
         btnGetFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                checkDownloadQueue();
 
+//                mBuilder =
+//                        new NotificationCompat.Builder(MainActivity.this)
+//                                .setSmallIcon(android.R.drawable.btn_minus)
+//                                .setContentTitle("My notification")
+//                                .setContentText("Hello World!");
+//
+//                int mNotificationId = 001;
+//// Gets an instance of the NotificationManager service
+//                mNotifyMgr =
+//                        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//// Builds the notification and issues it.
+//                mBuilder.setProgress(100, 0, false);
+//                mNotifyMgr.notify(mNotificationId, mBuilder.build());
+//
+//                checkDownloadQueue();
 
-                NotificationCompat.Builder mBuilder =
-                        new NotificationCompat.Builder(MainActivity.this)
-                                .setSmallIcon(android.R.drawable.btn_minus)
-                                .setContentTitle("My notification")
-                                .setContentText("Hello World!");
-
-                int mNotificationId = 001;
-// Gets an instance of the NotificationManager service
-                NotificationManager mNotifyMgr =
-                        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-// Builds the notification and issues it.
-                mBuilder.setProgress(100, 20, false);
-                mNotifyMgr.notify(mNotificationId, mBuilder.build());
-
+                createDummyList();
+                Intent intent = new Intent(MainActivity.this,RetroDownloadService.class);
+                intent.putParcelableArrayListExtra(RetroDownloadService.KEY_DOWNLOAD_LIST, downloadModels);
+                startService(intent);
 
             }
         });
     }
 
-    public void checkDownloadQueue(){
+    public void createDummyList(){
+        downloadModels.add(new DownloadModel("Sample 1 Cheerleader","sample1.mp4",""));
+        downloadModels.add(new DownloadModel("Sample 2 pandra gatey","sample2.mp4",""));
+        downloadModels.add(new DownloadModel("Sample 3 pandra gatey","sample3.mp4",""));
+        downloadModels.add(new DownloadModel("Sample 4 For the first time","sample4.mp4",""));
+    }
+
+    public void checkDownloadQueue() {
         if (downloadFilesArryList.size() != 0) {
             Log.e("queue not empty", "--");
             startRetrofitDownload(downloadFilesArryList.get(0));
+            mBuilder.setContentText(downloadFilesArryList.get(0));
+            progressList.clear();
+            mNotifyMgr.notify(001, mBuilder.build());
             downloadFilesArryList.remove(0);
+
         } else {
             Log.e("queue is empty", "--");
         }
@@ -92,9 +113,9 @@ public class MainActivity extends AppCompatActivity {
 //                        Log.e("success req", "--" + is.toString());
 
 
-                DecodeThread decodeThread = new DecodeThread(response, fileName);
-                Log.e("now decoding", "--");
-                decodeThread.start();
+//                DecodeThread decodeThread = new DecodeThread(response, fileName);
+//                Log.e("now decoding", "--");
+//                decodeThread.start();
 
 
             }
@@ -106,54 +127,18 @@ public class MainActivity extends AppCompatActivity {
         }, "/" + fileName);
     }
 
-    public class DecodeThread extends Thread {
-        Response<ResponseBody> response;
-        String fileName;
-
-        public DecodeThread(Response<ResponseBody> response, String filename) {
-            this.fileName = filename;
-            this.response = response;
-        }
-
-        @Override
-        public void run() {
-            super.run();
-
-            InputStream input = null;
-            try {
-                input = response.body().byteStream();
-                File file = new File(Environment.getExternalStorageDirectory(), fileName);
-                OutputStream output = new FileOutputStream(file);
-                try {
-                    try {
-                        byte[] buffer = new byte[4 * 1024]; // or other buffer size
-                        int read;
-
-                        while ((read = input.read(buffer)) != -1) {
-                            output.write(buffer, 0, read);
-                        }
-                        output.flush();
-                        Log.e("success req", "--");
-
-                       checkDownloadQueue();
-
-                    } finally {
-                        output.close();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(); // handle exception, define IOException and others
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    @Override
+    public void update(long bytesRead, long contentLength, boolean done) {
+//        int progress = (int) ((100 * bytesRead) / contentLength);
+//        if (progress % 10 == 0) {
+//            if (!progressList.contains(progress)) {
+//                progressList.add(progress);
+//                mBuilder.setProgress(100, (int) progress, false);
+//                mNotifyMgr.notify(001, mBuilder.build());
+//            }
+//            Log.e("progress ", "" + ((100 * bytesRead) / contentLength));
+//        }
     }
+
+
 }
