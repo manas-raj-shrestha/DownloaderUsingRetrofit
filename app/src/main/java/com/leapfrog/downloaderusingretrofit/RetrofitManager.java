@@ -25,7 +25,7 @@ import retrofit.Retrofit;
 public class RetrofitManager {
 
     public static Retrofit retrofit = null;
-    public static RetrofitApi iVayooService = null;
+    public static RetrofitApi retrofitApi = null;
     public static RetrofitManager retrofitManager = null;
     private ProgressListener progressListener;
 
@@ -36,7 +36,7 @@ public class RetrofitManager {
     private RetrofitManager() {
 
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.100:9090")
+                .baseUrl("http://192.168.1.100:9090/")
                 .addConverterFactory(GsonConverterFactory.create()).client(buildOkHttpClient())
                 .build();
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -50,7 +50,7 @@ public class RetrofitManager {
             }
         });
 
-        iVayooService = retrofit.create(RetrofitApi.class);
+        retrofitApi = retrofit.create(RetrofitApi.class);
 
     }
 
@@ -62,7 +62,7 @@ public class RetrofitManager {
     }
 
     public void getThumb(Callback<ResponseBody> callback, String fileName) {
-        Call<ResponseBody> memberCredential = iVayooService.getThumbs(fileName);
+        Call<ResponseBody> memberCredential = retrofitApi.getThumbs(fileName);
         memberCredential.enqueue(callback);
     }
 
@@ -79,16 +79,6 @@ public class RetrofitManager {
         });
         return okHttpClient;
     }
-
-//    final ProgressListener progressListener = new ProgressListener() {
-//        @Override
-//        public void update(long bytesRead, long contentLength, boolean done) {
-//            System.out.println(bytesRead);
-//            System.out.println(contentLength);
-//            System.out.println(done);
-//            System.out.format("%d%% done\n", (100 * bytesRead) / contentLength);
-//        }
-//    };
 
     private static class ProgressResponseBody extends ResponseBody {
 

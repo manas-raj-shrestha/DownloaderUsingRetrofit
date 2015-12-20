@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
         downloadModels.add(new DownloadModel("Sample 2 pandra gatey","sample2.mp4",""));
         downloadModels.add(new DownloadModel("Sample 3 pandra gatey","sample3.mp4",""));
         downloadModels.add(new DownloadModel("Sample 4 For the first time","sample4.mp4",""));
+        downloadModels.add(new DownloadModel("Image 4 For the clash of clan","samplepic.jpg",""));
     }
 
     public void checkDownloadQueue() {

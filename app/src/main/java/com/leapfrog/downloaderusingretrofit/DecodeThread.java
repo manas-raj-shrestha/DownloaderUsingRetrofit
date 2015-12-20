@@ -44,7 +44,6 @@ public class DecodeThread extends Thread {
                         output.write(buffer, 0, read);
                     }
                     output.flush();
-                    Log.e("success req", "--");
 
                     handler.sendEmptyMessage(0);
 

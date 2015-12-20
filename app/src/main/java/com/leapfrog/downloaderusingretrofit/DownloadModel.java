@@ -3,8 +3,6 @@ package com.leapfrog.downloaderusingretrofit;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.util.ArrayList;
-
 /**
  * Created by Manas on 12/18/2015.
  */
@@ -56,7 +54,14 @@ public class DownloadModel implements Parcelable {
         this.sdCardLocation = sdCardLocation;
     }
 
-    public DownloadModel(String displayMessage,String url,String sdCardLocation){
+    /**
+     * Method to set object
+     *
+     * @param displayMessage Message to be displayed in notification
+     * @param url            Filename
+     * @param sdCardLocation Location for file storage
+     */
+    public DownloadModel(String displayMessage, String url, String sdCardLocation) {
         this.displayMessage = displayMessage;
         this.url = url;
         this.sdCardLocation = sdCardLocation;

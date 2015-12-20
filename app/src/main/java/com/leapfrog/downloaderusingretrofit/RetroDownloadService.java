@@ -2,13 +2,15 @@ package com.leapfrog.downloaderusingretrofit;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.StatFs;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -64,7 +66,19 @@ public class RetroDownloadService extends Service implements ProgressListener {
         downloadModels = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
 
         createNotification();
-        checkDownloadQueue();
+        if (checkDiskSize() > 100) {
+            Intent intent1 = new Intent(this, MainActivity.class);
+            // Open NotificationView.java Activity
+            PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            notificationBuilder.setContentTitle("Disk full");
+            notificationBuilder.addAction(android.R.drawable.sym_action_chat,"Retry",pIntent);
+            notificationBuilder.setContentIntent(pIntent);
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        } else {
+            checkDownloadQueue();
+        }
+
     }
 
     /**
@@ -77,8 +91,6 @@ public class RetroDownloadService extends Service implements ProgressListener {
         // Gets an instance of the NotificationManager service
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        // Builds the notification and issues it.
-        notificationBuilder.setProgress(NOTIFICATION_PROGRESS_UPPER_BOUND, 0, false);
         Notification notification = notificationBuilder.build();
         notification.flags = Notification.FLAG_NO_CLEAR;
         notificationManager.notify(NOTIFICATION_ID, notification);
@@ -100,9 +112,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
             @Override
             public void onFailure(Throwable t) {
-                Log.e("failed req", "--" + t.getMessage());
+                notificationBuilder.setContentText("Notification failed");
+                notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
             }
-        }, "/" + fileName);
+        }, fileName);
     }
 
     /**
@@ -117,7 +130,20 @@ public class RetroDownloadService extends Service implements ProgressListener {
             notification.flags = Notification.FLAG_NO_CLEAR;
             notificationManager.notify(NOTIFICATION_ID, notification);
             downloadModels.remove(HEAD_POSITION);
+        } else {
+            notificationBuilder.setContentText("Download Complete");
+            Notification notification = notificationBuilder.build();
+            notificationManager.notify(NOTIFICATION_ID, notification);
         }
+    }
+
+    private long checkDiskSize() {
+        final long SIZE_KB = 1024L;
+        final long SIZE_MB = SIZE_KB * SIZE_KB;
+        long availableSpace = -1L;
+        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        availableSpace = (long) stat.getAvailableBlocks() * (long) stat.getBlockSize();
+        return (availableSpace / SIZE_MB);
     }
 
     @Override
