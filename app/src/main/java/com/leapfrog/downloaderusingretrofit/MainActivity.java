@@ -3,7 +3,6 @@ package com.leapfrog.downloaderusingretrofit;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -12,16 +11,9 @@ import android.widget.Button;
 
 import com.squareup.okhttp.ResponseBody;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 import retrofit.Callback;
-import retrofit.Response;
 import retrofit.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements ProgressListener {
@@ -69,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
 //                checkDownloadQueue();
 
                 createDummyList();
-                Intent intent = new Intent(MainActivity.this,RetroDownloadService.class);
+                Intent intent = new Intent(MainActivity.this, RetroDownloadService.class);
                 intent.putParcelableArrayListExtra(RetroDownloadService.KEY_DOWNLOAD_LIST, downloadModels);
                 startService(intent);
 
@@ -77,12 +69,13 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
         });
     }
 
-    public void createDummyList(){
-        downloadModels.add(new DownloadModel("Sample 1 Cheerleader","sample1.mp4",""));
-        downloadModels.add(new DownloadModel("Sample 2 pandra gatey","sample2.mp4",""));
-        downloadModels.add(new DownloadModel("Sample 3 pandra gatey","sample3.mp4",""));
-        downloadModels.add(new DownloadModel("Sample 4 For the first time","sample4.mp4",""));
-        downloadModels.add(new DownloadModel("Image 4 For the clash of clan","samplepic.jpg",""));
+    public void createDummyList() {
+        downloadModels.add(new DownloadModel("short clip", "sample1.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("rajesh", "sample2.jpg", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("surhid", "sample3.jpg", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("shilu", "sample4.jpg", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("lego house", "sample5.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        Log.e("===", "" + getPackageName());
     }
 
     public void checkDownloadQueue() {

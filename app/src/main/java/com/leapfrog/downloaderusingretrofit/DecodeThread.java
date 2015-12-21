@@ -2,7 +2,6 @@ package com.leapfrog.downloaderusingretrofit;
 
 import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -19,11 +18,13 @@ public class DecodeThread extends Thread {
     Response<ResponseBody> response;
     String fileName;
     Handler handler;
+    String sdCardLocation;
 
-    public DecodeThread(Response<ResponseBody> response,Handler handler, String filename) {
+    public DecodeThread(Response<ResponseBody> response, Handler handler, String filename, String storageLocation) {
         this.fileName = filename;
         this.response = response;
         this.handler = handler;
+        this.sdCardLocation = storageLocation;
     }
 
     @Override
@@ -33,7 +34,13 @@ public class DecodeThread extends Thread {
         InputStream input = null;
         try {
             input = response.body().byteStream();
-            File file = new File(Environment.getExternalStorageDirectory(), fileName);
+            File directory = new File(Environment.getExternalStorageDirectory() + sdCardLocation);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            File file = new File(Environment.getExternalStorageDirectory() + sdCardLocation, fileName);
+
             OutputStream output = new FileOutputStream(file);
             try {
                 try {

@@ -66,13 +66,13 @@ public class RetroDownloadService extends Service implements ProgressListener {
         downloadModels = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
 
         createNotification();
-        if (checkDiskSize() > 100) {
+        if (checkDiskSize() < 100) {
             Intent intent1 = new Intent(this, MainActivity.class);
             // Open NotificationView.java Activity
             PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             notificationBuilder.setContentTitle("Disk full");
-            notificationBuilder.addAction(android.R.drawable.sym_action_chat,"Retry",pIntent);
+            notificationBuilder.addAction(android.R.drawable.sym_action_chat, "Retry", pIntent);
             notificationBuilder.setContentIntent(pIntent);
             notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
         } else {
@@ -101,12 +101,12 @@ public class RetroDownloadService extends Service implements ProgressListener {
      *
      * @param fileName Name of file to be downloaded
      */
-    public void startRetrofitDownload(final String fileName) {
+    public void startRetrofitDownload(final String fileName, final String sdCardLocation) {
         RetrofitManager.getInstance().getThumb(new Callback<ResponseBody>() {
 
             @Override
             public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
-                DecodeThread decodeThread = new DecodeThread(response, handler, fileName);
+                DecodeThread decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
                 decodeThread.start();
             }
 
@@ -123,8 +123,8 @@ public class RetroDownloadService extends Service implements ProgressListener {
      */
     public void checkDownloadQueue() {
         if (downloadModels.size() != 0) {
-            startRetrofitDownload(downloadModels.get(HEAD_POSITION).getUrls());
-            notificationBuilder.setContentText(downloadModels.get(HEAD_POSITION).getUrls());
+            startRetrofitDownload(downloadModels.get(HEAD_POSITION).getFilename(), downloadModels.get(HEAD_POSITION).getSdCardLocation());
+            notificationBuilder.setContentText(downloadModels.get(HEAD_POSITION).getFilename());
             progressList.clear();
             Notification notification = notificationBuilder.build();
             notification.flags = Notification.FLAG_NO_CLEAR;
@@ -137,6 +137,11 @@ public class RetroDownloadService extends Service implements ProgressListener {
         }
     }
 
+    /**
+     * Method to check for available disk space in MB
+     *
+     * @return available disk size
+     */
     private long checkDiskSize() {
         final long SIZE_KB = 1024L;
         final long SIZE_MB = SIZE_KB * SIZE_KB;

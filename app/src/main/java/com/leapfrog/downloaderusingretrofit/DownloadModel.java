@@ -9,12 +9,12 @@ import android.os.Parcelable;
 public class DownloadModel implements Parcelable {
 
     private String displayMessage;
-    private String url;
+    private String filename;
     private String sdCardLocation;
 
     protected DownloadModel(Parcel in) {
         displayMessage = in.readString();
-        url = in.readString();
+        filename = in.readString();
         sdCardLocation = in.readString();
     }
 
@@ -38,12 +38,12 @@ public class DownloadModel implements Parcelable {
         this.displayMessage = displayMessage;
     }
 
-    public String getUrls() {
-        return url;
+    public String getFilename() {
+        return filename;
     }
 
-    public void setUrls(String url) {
-        this.url = url;
+    public void setFilename(String url) {
+        this.filename = url;
     }
 
     public String getSdCardLocation() {
@@ -63,10 +63,9 @@ public class DownloadModel implements Parcelable {
      */
     public DownloadModel(String displayMessage, String url, String sdCardLocation) {
         this.displayMessage = displayMessage;
-        this.url = url;
+        this.filename = url;
         this.sdCardLocation = sdCardLocation;
     }
-
 
     @Override
     public int describeContents() {
@@ -76,7 +75,8 @@ public class DownloadModel implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(displayMessage);
-        parcel.writeString(url);
+        parcel.writeString(filename);
         parcel.writeString(sdCardLocation);
     }
+
 }
