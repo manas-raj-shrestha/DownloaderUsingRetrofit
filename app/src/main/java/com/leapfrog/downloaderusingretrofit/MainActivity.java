@@ -44,22 +44,6 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
             public void onClick(View view) {
 
 
-//                mBuilder =
-//                        new NotificationCompat.Builder(MainActivity.this)
-//                                .setSmallIcon(android.R.drawable.btn_minus)
-//                                .setContentTitle("My notification")
-//                                .setContentText("Hello World!");
-//
-//                int mNotificationId = 001;
-//// Gets an instance of the NotificationManager service
-//                mNotifyMgr =
-//                        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-//// Builds the notification and issues it.
-//                mBuilder.setProgress(100, 0, false);
-//                mNotifyMgr.notify(mNotificationId, mBuilder.build());
-//
-//                checkDownloadQueue();
-
                 createDummyList();
                 Intent intent = new Intent(MainActivity.this, RetroDownloadService.class);
                 intent.putParcelableArrayListExtra(RetroDownloadService.KEY_DOWNLOAD_LIST, downloadModels);
@@ -70,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
     }
 
     public void createDummyList() {
+        downloadModels.clear();
         downloadModels.add(new DownloadModel("short clip", "sample1.mp4", "/Android/data/" + getPackageName() + "/appdata"));
         downloadModels.add(new DownloadModel("rajesh", "sample2.jpg", "/Android/data/" + getPackageName() + "/appdata"));
         downloadModels.add(new DownloadModel("surhid", "sample3.jpg", "/Android/data/" + getPackageName() + "/appdata"));
@@ -121,18 +106,22 @@ public class MainActivity extends AppCompatActivity implements ProgressListener 
         }, "/" + fileName);
     }
 
+//    @Override
+//    public void update(long bytesRead, long contentLength, boolean done) {
+////        int progress = (int) ((100 * bytesRead) / contentLength);
+////        if (progress % 10 == 0) {
+////            if (!progressList.contains(progress)) {
+////                progressList.add(progress);
+////                mBuilder.setProgress(100, (int) progress, false);
+////                mNotifyMgr.notify(001, mBuilder.build());
+////            }
+////            Log.e("progress ", "" + ((100 * bytesRead) / contentLength));
+////        }
+//    }
+
+
     @Override
-    public void update(long bytesRead, long contentLength, boolean done) {
-//        int progress = (int) ((100 * bytesRead) / contentLength);
-//        if (progress % 10 == 0) {
-//            if (!progressList.contains(progress)) {
-//                progressList.add(progress);
-//                mBuilder.setProgress(100, (int) progress, false);
-//                mNotifyMgr.notify(001, mBuilder.build());
-//            }
-//            Log.e("progress ", "" + ((100 * bytesRead) / contentLength));
-//        }
+    public void update(long bytesRead, long contentLength, boolean done, boolean connectionTimeOut) {
+
     }
-
-
 }

@@ -1,7 +1,5 @@
 package com.leapfrog.downloaderusingretrofit;
 
-import android.util.Log;
-
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -31,14 +29,14 @@ public class RetrofitManager {
     public static RetrofitManager retrofitManager = null;
     private ProgressListener progressListener;
 
-    public void setProgressListener(ProgressListener progressListener){
+    public void setProgressListener(ProgressListener progressListener) {
         this.progressListener = progressListener;
     }
 
     private RetrofitManager() {
 
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.10.11.112:9090/")
+                .baseUrl("http://192.168.1.9:9090/")
                 .addConverterFactory(GsonConverterFactory.create()).client(buildOkHttpClient())
                 .build();
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -132,14 +130,15 @@ public class RetrofitManager {
                         bytesRead = super.read(sink, byteCount);
                         // read() returns the number of bytes read, or -1 if this source is exhausted.
                         totalBytesRead += bytesRead != -1 ? bytesRead : 0;
-                        progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                        progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1, false);
                         return bytesRead;
                     } catch (IOException e) {
-                        Log.e("out","---");
                         e.printStackTrace();
-                        return totalBytesRead;
+                        progressListener.update(totalBytesRead, 0, bytesRead == -1, true);
+                        return -1;
                     }
                 }
+
             };
         }
     }

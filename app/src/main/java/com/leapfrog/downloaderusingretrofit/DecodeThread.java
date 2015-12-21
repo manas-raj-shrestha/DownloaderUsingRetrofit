@@ -2,6 +2,7 @@ package com.leapfrog.downloaderusingretrofit;
 
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -14,7 +15,7 @@ import java.io.OutputStream;
 
 import retrofit.Response;
 
-public class DecodeThread extends Thread {
+public class DecodeThread extends Thread{
     Response<ResponseBody> response;
     String fileName;
     Handler handler;
@@ -51,7 +52,6 @@ public class DecodeThread extends Thread {
                         output.write(buffer, 0, read);
                     }
                     output.flush();
-
                     handler.sendEmptyMessage(0);
 
                 } finally {
@@ -72,4 +72,5 @@ public class DecodeThread extends Thread {
             }
         }
     }
+
 }
