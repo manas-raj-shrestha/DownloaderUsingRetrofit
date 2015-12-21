@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.StatFs;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -46,6 +47,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.e("service started", "service started");
 
         if (intent != null) {
             handleCommand(intent);
@@ -55,6 +57,13 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
         return START_STICKY;
     }
+
+
+//    @Override
+//    public void onCreate() {
+//        super.onCreate();
+//        Log.e("service started", "service started");
+//    }
 
     /**
      * Core method that initializes the download and then starts it
@@ -67,10 +76,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
         createNotification();
         if (checkDiskSize() < 100) {
-            Intent intent1 = new Intent(this, MainActivity.class);
+            Intent intent1 = new Intent(this, RetroDownloadService.class);
+            intent1.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadModels);
             // Open NotificationView.java Activity
-            PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pIntent = PendingIntent.getService(this, 0, intent, 0);
             notificationBuilder.setContentTitle("Disk full");
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, "Retry", pIntent);
             notificationBuilder.setContentIntent(pIntent);
@@ -108,11 +117,21 @@ public class RetroDownloadService extends Service implements ProgressListener {
             public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
                 DecodeThread decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
                 decodeThread.start();
+                Log.e("starting", "starting");
             }
 
             @Override
             public void onFailure(Throwable t) {
-                notificationBuilder.setContentText("Notification failed");
+                Log.e("failed","failed");
+                Intent intent1 = new Intent(RetroDownloadService.this, RetroDownloadService.class);
+                intent1.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadModels);
+                // Open NotificationView.java Activity
+                PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent1, 0);
+                notificationBuilder.addAction(android.R.drawable.sym_action_chat, "Retry", pIntent);
+                notificationBuilder.setContentText("Download Failed");
+                notificationBuilder.setContentIntent(pIntent);
+                notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+
                 notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
             }
         }, fileName);

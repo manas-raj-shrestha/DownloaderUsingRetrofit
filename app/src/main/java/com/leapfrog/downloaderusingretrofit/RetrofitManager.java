@@ -1,5 +1,7 @@
 package com.leapfrog.downloaderusingretrofit;
 
+import android.util.Log;
+
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -41,7 +43,8 @@ public class RetrofitManager {
                 .build();
         OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setReadTimeout(60, TimeUnit.SECONDS);
-        okHttpClient.setConnectTimeout(400, TimeUnit.SECONDS);
+        okHttpClient.setConnectTimeout(60, TimeUnit.SECONDS);
+        okHttpClient.setRetryOnConnectionFailure(true);
 
         okHttpClient.networkInterceptors().add(new Interceptor() {
             @Override
@@ -123,12 +126,19 @@ public class RetrofitManager {
                 long totalBytesRead = 0L;
 
                 @Override
-                public long read(Buffer sink, long byteCount) throws IOException {
-                    long bytesRead = super.read(sink, byteCount);
-                    // read() returns the number of bytes read, or -1 if this source is exhausted.
-                    totalBytesRead += bytesRead != -1 ? bytesRead : 0;
-                    progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
-                    return bytesRead;
+                public long read(Buffer sink, long byteCount) {
+                    long bytesRead = 0;
+                    try {
+                        bytesRead = super.read(sink, byteCount);
+                        // read() returns the number of bytes read, or -1 if this source is exhausted.
+                        totalBytesRead += bytesRead != -1 ? bytesRead : 0;
+                        progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                        return bytesRead;
+                    } catch (IOException e) {
+                        Log.e("out","---");
+                        e.printStackTrace();
+                        return totalBytesRead;
+                    }
                 }
             };
         }
