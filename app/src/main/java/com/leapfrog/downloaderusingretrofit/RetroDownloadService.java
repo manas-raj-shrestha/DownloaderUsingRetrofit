@@ -87,10 +87,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
         createNotification();
         if (checkDiskSize() < MINIMUM_STORAGE_REQUIREMENT) {
             PendingIntent pIntent = PendingIntent.getService(this, 0, intent, 0);
-            notificationBuilder.setContentTitle(MSG_DISK_FULL);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
             notificationBuilder.setContentIntent(pIntent);
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+
+            updateNotification(MSG_DISK_FULL, 0, false, 0);
         } else {
             checkDownloadQueue();
         }
@@ -107,9 +107,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
         // Gets an instance of the NotificationManager service
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        Notification notification = notificationBuilder.build();
-        notification.flags = Notification.FLAG_NO_CLEAR;
-        notificationManager.notify(NOTIFICATION_ID, notification);
+        updateNotification("", Notification.FLAG_NO_CLEAR, false, 0);
     }
 
     /**
@@ -130,9 +128,9 @@ public class RetroDownloadService extends Service implements ProgressListener {
             public void onFailure(Throwable t) {
                 PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
                 notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
-                notificationBuilder.setContentText(MSG_DOWNLOAD_FAILED);
                 notificationBuilder.setContentIntent(pIntent);
-                notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+
+                updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
             }
         }, fileName);
     }
@@ -143,15 +141,11 @@ public class RetroDownloadService extends Service implements ProgressListener {
     public void checkDownloadQueue() {
         if (downloadQueue.size() != 0) {
             startRetrofitDownload(downloadQueue.get(HEAD_POSITION).getFilename(), downloadQueue.get(HEAD_POSITION).getSdCardLocation());
-            notificationBuilder.setContentText(downloadQueue.get(HEAD_POSITION).getFilename());
             progressList.clear();
-            Notification notification = notificationBuilder.build();
-            notification.flags = Notification.FLAG_NO_CLEAR;
-            notificationManager.notify(NOTIFICATION_ID, notification);
+
+            updateNotification(downloadQueue.get(HEAD_POSITION).getFilename(), Notification.FLAG_NO_CLEAR, true, 0);
         } else {
-            notificationBuilder.setContentText(MSG_DOWNLOAD_SUCCESSFUL);
-            Notification notification = notificationBuilder.build();
-            notificationManager.notify(NOTIFICATION_ID, notification);
+            updateNotification(MSG_DOWNLOAD_SUCCESSFUL, 0, false, 0);
         }
     }
 
@@ -181,20 +175,43 @@ public class RetroDownloadService extends Service implements ProgressListener {
             if (progress % PROGRESS_UPDATE_INTERVAL == 0) {
                 if (!progressList.contains(progress)) {
                     progressList.add(progress);
-                    notificationBuilder.setProgress(NOTIFICATION_PROGRESS_UPPER_BOUND, progress, false);
-                    Notification notification = notificationBuilder.build();
-                    notification.flags = Notification.FLAG_NO_CLEAR;
-                    notificationManager.notify(NOTIFICATION_ID, notification);
+
+                    updateNotification(downloadQueue.get(HEAD_POSITION).getFilename(), Notification.FLAG_NO_CLEAR, true, progress);
                 }
             }
         } else {
             this.connectionTimeOut = connectionTimeOut;
             PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
-            notificationBuilder.setContentText(MSG_DOWNLOAD_FAILED);
             notificationBuilder.setContentIntent(pIntent);
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+
+            updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
         }
+    }
+
+    /**
+     * Method to update notification
+     *
+     * @param contentText
+     * @param notificationFlag
+     * @param showProgress
+     * @param progress
+     */
+    public void updateNotification(String contentText, int notificationFlag, boolean showProgress, int progress) {
+        notificationBuilder.setContentText(contentText);
+
+        if (showProgress) {
+            notificationBuilder.setProgress(NOTIFICATION_PROGRESS_UPPER_BOUND, progress, false);
+        } else {
+            notificationBuilder.setProgress(0, 0, false);
+        }
+
+        Notification notification = notificationBuilder.build();
+        if (notificationFlag != 0) {
+            notification.flags = notificationFlag;
+        }
+
+        notificationManager.notify(NOTIFICATION_ID, notification);
     }
 
 }
