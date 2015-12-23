@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.StatFs;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -30,7 +31,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
     private static final String MSG_RETRY = "Retry";
     private static final String MSG_DOWNLOAD_FAILED = "Download Failed";
     private static final String MSG_DOWNLOAD_SUCCESSFUL = "Download Successful";
-    private static final String MSG_DOWNLOADING = "Downloading ...";
+    private static final String MSG_DOWNLOADING = "Downloading";
 
     private static final int NOTIFICATION_ID = 001;
     private static final int NOTIFICATION_PROGRESS_UPPER_BOUND = 100;
@@ -42,6 +43,8 @@ public class RetroDownloadService extends Service implements ProgressListener {
     private NotificationManager notificationManager;
     private Intent intent;
     private boolean connectionTimeOut = false;
+    private int currentDownload = 0;
+    private int totalQueueItems;
 
     private ArrayList<DownloadModel> downloadQueue = new ArrayList<>();
     private ArrayList<Integer> progressList = new ArrayList<>();
@@ -83,6 +86,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
     private void handleCommand(Intent intent) {
 
         downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
+        totalQueueItems = downloadQueue.size();
 
         createNotification();
         if (checkDiskSize() < MINIMUM_STORAGE_REQUIREMENT) {
@@ -141,9 +145,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
     public void checkDownloadQueue() {
         if (downloadQueue.size() != 0) {
             startRetrofitDownload(downloadQueue.get(HEAD_POSITION).getFilename(), downloadQueue.get(HEAD_POSITION).getSdCardLocation());
+            currentDownload++;
             progressList.clear();
 
-            updateNotification(downloadQueue.get(HEAD_POSITION).getFilename(), Notification.FLAG_NO_CLEAR, true, 0);
+            updateNotification(MSG_DOWNLOADING + " " + currentDownload + " of " + totalQueueItems, Notification.FLAG_NO_CLEAR, true, 0);
         } else {
             updateNotification(MSG_DOWNLOAD_SUCCESSFUL, 0, false, 0);
         }
@@ -171,12 +176,13 @@ public class RetroDownloadService extends Service implements ProgressListener {
     @Override
     public void update(long bytesRead, long contentLength, boolean done, boolean connectionTimeOut) {
         if (!connectionTimeOut) {
+            Log.e("content length", String.valueOf(contentLength));
             int progress = (int) ((100 * bytesRead) / contentLength);
             if (progress % PROGRESS_UPDATE_INTERVAL == 0) {
                 if (!progressList.contains(progress)) {
                     progressList.add(progress);
 
-                    updateNotification(downloadQueue.get(HEAD_POSITION).getFilename(), Notification.FLAG_NO_CLEAR, true, progress);
+                    updateNotification(MSG_DOWNLOADING + " " + currentDownload + " of " + totalQueueItems, Notification.FLAG_NO_CLEAR, true, progress);
                 }
             }
         } else {
