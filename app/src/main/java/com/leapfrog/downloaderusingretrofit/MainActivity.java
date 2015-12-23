@@ -42,10 +42,10 @@ public class MainActivity extends AppCompatActivity {
     public void createDummyList() {
         downloadModels.clear();
         downloadModels.add(new DownloadModel("short clip", "sample1.mp4", "/Android/data/" + getPackageName() + "/appdata"));
-        downloadModels.add(new DownloadModel("rajesh", "sample2.jpg", "/Android/data/" + getPackageName() + "/appdata"));
-        downloadModels.add(new DownloadModel("surhid", "sample3.jpg", "/Android/data/" + getPackageName() + "/appdata"));
-        downloadModels.add(new DownloadModel("shilu", "sample4.jpg", "/Android/data/" + getPackageName() + "/appdata"));
-        downloadModels.add(new DownloadModel("lego house", "sample5.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("rajesh", "sample2.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("surhid", "sample3.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("shilu", "sample4.mp4", "/Android/data/" + getPackageName() + "/appdata"));
+        downloadModels.add(new DownloadModel("lego house", "samplepic.jpg", "/Android/data/" + getPackageName() + "/appdata"));
     }
 
 }

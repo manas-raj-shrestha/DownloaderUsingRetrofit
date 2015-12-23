@@ -87,6 +87,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
         downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
         totalQueueItems = downloadQueue.size();
+        currentDownload = 0;
 
         createNotification();
         if (checkDiskSize() < MINIMUM_STORAGE_REQUIREMENT) {
