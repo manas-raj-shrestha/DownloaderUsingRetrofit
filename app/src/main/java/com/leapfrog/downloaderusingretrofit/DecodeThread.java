@@ -2,10 +2,10 @@ package com.leapfrog.downloaderusingretrofit;
 
 import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,8 +15,9 @@ import java.io.OutputStream;
 
 import retrofit.Response;
 
-public class DecodeThread extends Thread{
-    Response<ResponseBody> response;
+public class DecodeThread extends Thread {
+    Response<ResponseBody> response = null;
+    byte[] responseByte = null;
     String fileName;
     Handler handler;
     String sdCardLocation;
@@ -28,13 +29,24 @@ public class DecodeThread extends Thread{
         this.sdCardLocation = storageLocation;
     }
 
+    public DecodeThread(byte[] response, Handler handler, String filename, String storageLocation) {
+        this.fileName = filename;
+        this.responseByte = response;
+        this.handler = handler;
+        this.sdCardLocation = storageLocation;
+    }
+
     @Override
     public void run() {
         super.run();
 
         InputStream input = null;
         try {
-            input = response.body().byteStream();
+            if (response != null)
+                input = response.body().byteStream();
+            else
+                input = new ByteArrayInputStream(responseByte);
+
             File directory = new File(Environment.getExternalStorageDirectory() + sdCardLocation);
             if (!directory.exists()) {
                 directory.mkdirs();

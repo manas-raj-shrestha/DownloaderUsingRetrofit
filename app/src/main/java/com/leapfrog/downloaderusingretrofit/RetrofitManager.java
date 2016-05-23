@@ -36,13 +36,14 @@ public class RetrofitManager {
     private RetrofitManager() {
 
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.10.11.112:9090/")
+                .baseUrl("http://10.10.11.112:8000/")
                 .addConverterFactory(GsonConverterFactory.create()).client(buildOkHttpClient())
                 .build();
         OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setReadTimeout(60, TimeUnit.SECONDS);
         okHttpClient.setConnectTimeout(60, TimeUnit.SECONDS);
         okHttpClient.setRetryOnConnectionFailure(true);
+
 
         okHttpClient.networkInterceptors().add(new Interceptor() {
             @Override
@@ -62,9 +63,16 @@ public class RetrofitManager {
         return retrofitManager;
     }
 
+    Call<ResponseBody> memberCredential;
+
     public void getThumb(Callback<ResponseBody> callback, String fileName) {
-        Call<ResponseBody> memberCredential = retrofitApi.getThumbs(fileName);
+        memberCredential = retrofitApi.getThumbs(fileName);
         memberCredential.enqueue(callback);
+    }
+
+    public void cancelCallbacks() {
+        if (memberCredential != null)
+            memberCredential.cancel();
     }
 
     private OkHttpClient buildOkHttpClient() {
