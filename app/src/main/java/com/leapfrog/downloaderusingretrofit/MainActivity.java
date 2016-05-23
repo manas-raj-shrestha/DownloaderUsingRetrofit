@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
                 createDummyList();
                 Intent intent = new Intent(MainActivity.this, RetroDownloadService.class);
                 intent.putParcelableArrayListExtra(RetroDownloadService.KEY_DOWNLOAD_LIST, downloadModels);
-                intent.putExtra(RetroDownloadService.KEY_CONTINUE, true);
                 startService(intent);
 
             }

@@ -87,17 +87,17 @@ public class RetroDownloadService extends Service implements ProgressListener {
      */
     private void handleCommand(final Intent intent) {
         RetrofitManager.getInstance().cancelCallbacks();
-        downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
-        currentDownload = 0;
-
-        totalQueueItems = downloadQueue.size();
 
         //canceling the retrofit callbacks take time.
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                createNotification();
+                downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
+                currentDownload = 0;
+                totalQueueItems = downloadQueue.size();
 
+                createNotification();
+                connectionTimeOut = false;
                 if (checkDiskSize() < MINIMUM_STORAGE_REQUIREMENT) {
                     PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
                     notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
@@ -108,9 +108,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
                     checkDownloadQueue();
                 }
             }
-        },200);
-
-
+        }, 200);
 
     }
 
@@ -132,6 +130,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
         updateNotification("", Notification.FLAG_NO_CLEAR, false, 0);
     }
+    DecodeThread decodeThread;
 
     /**
      * Method to start download using retrofit
@@ -143,7 +142,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
             @Override
             public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
-                DecodeThread decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
+                decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
                 decodeThread.start();
             }
 
@@ -166,8 +165,8 @@ public class RetroDownloadService extends Service implements ProgressListener {
             startRetrofitDownload(downloadQueue.get(HEAD_POSITION).getFilename(), downloadQueue.get(HEAD_POSITION).getSdCardLocation());
             currentDownload++;
             progressList.clear();
-
-            Log.e("queue size", " " + downloadQueue.size());
+//            connectionTimeOut = true;
+            Log.e("queue size", "--- " + downloadQueue.size());
             updateNotification(MSG_DOWNLOADING + " " + currentDownload + " of " + totalQueueItems, Notification.FLAG_NO_CLEAR, true, 0);
         } else {
             updateNotification(MSG_DOWNLOAD_SUCCESSFUL, 0, false, 0);
@@ -196,7 +195,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
     @Override
     public void update(long bytesRead, long contentLength, boolean done, boolean connectionTimeOut) {
         if (!connectionTimeOut) {
-            Log.e("content length", String.valueOf(contentLength));
+//            Log.e("content length", String.valueOf(contentLength));
             int progress = (int) ((100 * bytesRead) / contentLength);
             if (progress % PROGRESS_UPDATE_INTERVAL == 0) {
                 if (!progressList.contains(progress)) {
@@ -211,8 +210,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
             PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
             notificationBuilder.setContentIntent(pIntent);
-
-            Log.e("problem here", "*****");
+//            Log.e("problem here", "*****");
             for (int i = 0; i < intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).size(); i++) {
                 Log.e("download items", ((DownloadModel) intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).get(i)).getFilename());
             }

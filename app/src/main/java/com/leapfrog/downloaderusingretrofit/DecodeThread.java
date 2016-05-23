@@ -2,6 +2,7 @@ package com.leapfrog.downloaderusingretrofit;
 
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 
 import com.squareup.okhttp.ResponseBody;
 
@@ -63,8 +64,10 @@ public class DecodeThread extends Thread {
                     while ((read = input.read(buffer)) != -1) {
                         output.write(buffer, 0, read);
                     }
+
                     output.flush();
                     handler.sendEmptyMessage(0);
+                    Log.e("done decoding", "done decoding");
 
                 } finally {
                     output.close();
