@@ -58,6 +58,7 @@ public class RetroDownloadService extends Service implements ProgressListener {
         @Override
         public boolean handleMessage(Message message) {
             if (!connectionTimeOut) {
+                Log.e("this called ", "this called");
                 downloadQueue.remove(HEAD_POSITION);
                 checkDownloadQueue();
             }
@@ -70,7 +71,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.intent = intent;
+
+        Log.e("service ", "started");
         if (intent != null) {
+
             connectionTimeOut = false;
             handleCommand(intent);
         }
@@ -92,9 +96,19 @@ public class RetroDownloadService extends Service implements ProgressListener {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                downloadQueue.clear();
                 downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
+
+                if (intent.hasExtra("key")) {
+                    Log.e("has extra", "has extra");
+                } else {
+                    Log.e("no extra", "no extra");
+                }
+
                 currentDownload = 0;
                 totalQueueItems = downloadQueue.size();
+
+                Log.e("total que", " " + String.valueOf(totalQueueItems));
 
                 createNotification();
                 connectionTimeOut = false;
@@ -120,16 +134,12 @@ public class RetroDownloadService extends Service implements ProgressListener {
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(android.R.drawable.btn_minus).setContentTitle(MSG_DOWNLOADING);
 
-//        if (notificationManager != null) {
-//
-//            notificationBuilder.mActions.clear();
-//            Log.e("nofication manager","canceled");
-//        }
         // Gets an instance of the NotificationManager service
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         updateNotification("", Notification.FLAG_NO_CLEAR, false, 0);
     }
+
     DecodeThread decodeThread;
 
     /**
@@ -143,11 +153,17 @@ public class RetroDownloadService extends Service implements ProgressListener {
             @Override
             public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
                 decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
+                Log.e("success", fileName);
                 decodeThread.start();
             }
 
             @Override
             public void onFailure(Throwable t) {
+                Log.e("failure", fileName);
+                Intent intent = new Intent(RetroDownloadService.this, RetroDownloadService.class);
+                intent.putExtra("key", false);
+                intent.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadQueue);
+
                 PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
                 notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
                 notificationBuilder.setContentIntent(pIntent);
@@ -165,8 +181,6 @@ public class RetroDownloadService extends Service implements ProgressListener {
             startRetrofitDownload(downloadQueue.get(HEAD_POSITION).getFilename(), downloadQueue.get(HEAD_POSITION).getSdCardLocation());
             currentDownload++;
             progressList.clear();
-//            connectionTimeOut = true;
-            Log.e("queue size", "--- " + downloadQueue.size());
             updateNotification(MSG_DOWNLOADING + " " + currentDownload + " of " + totalQueueItems, Notification.FLAG_NO_CLEAR, true, 0);
         } else {
             updateNotification(MSG_DOWNLOAD_SUCCESSFUL, 0, false, 0);
@@ -195,7 +209,6 @@ public class RetroDownloadService extends Service implements ProgressListener {
     @Override
     public void update(long bytesRead, long contentLength, boolean done, boolean connectionTimeOut) {
         if (!connectionTimeOut) {
-//            Log.e("content length", String.valueOf(contentLength));
             int progress = (int) ((100 * bytesRead) / contentLength);
             if (progress % PROGRESS_UPDATE_INTERVAL == 0) {
                 if (!progressList.contains(progress)) {
@@ -207,13 +220,16 @@ public class RetroDownloadService extends Service implements ProgressListener {
         } else {
             this.connectionTimeOut = connectionTimeOut;
 
-            PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
+            Intent intent = new Intent(this, RetroDownloadService.class);
+            intent.putExtra("key", false);
+
+            intent.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadQueue);
+            Log.e("Download Queue Size", String.valueOf(downloadQueue.size()) + "  " + intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).size());
+
+            PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
             notificationBuilder.setContentIntent(pIntent);
-//            Log.e("problem here", "*****");
-            for (int i = 0; i < intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).size(); i++) {
-                Log.e("download items", ((DownloadModel) intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).get(i)).getFilename());
-            }
+            Log.e("problem here", "***** " + downloadQueue.size());
 
             updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
         }
@@ -235,6 +251,8 @@ public class RetroDownloadService extends Service implements ProgressListener {
         } else {
             notificationBuilder.setProgress(0, 0, false);
             Log.e("after failing download", "" + downloadQueue.size());
+            if (decodeThread != null)
+                decodeThread.downloadCompete = false;
         }
 
         Notification notification = notificationBuilder.build();

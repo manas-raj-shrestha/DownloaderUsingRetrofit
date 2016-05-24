@@ -22,6 +22,7 @@ public class DecodeThread extends Thread {
     String fileName;
     Handler handler;
     String sdCardLocation;
+  public   boolean downloadCompete = true;
 
     public DecodeThread(Response<ResponseBody> response, Handler handler, String filename, String storageLocation) {
         this.fileName = filename;
@@ -66,8 +67,13 @@ public class DecodeThread extends Thread {
                     }
 
                     output.flush();
-                    handler.sendEmptyMessage(0);
-                    Log.e("done decoding", "done decoding");
+
+                    if (downloadCompete) {
+                        handler.sendEmptyMessage(0);
+                        Log.e("done decoding", "done decoding");
+                    }else {
+                        Log.e("interupted", "interupted");
+                    }
 
                 } finally {
                     output.close();
