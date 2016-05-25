@@ -22,7 +22,7 @@ public class DecodeThread extends Thread {
     String fileName;
     Handler handler;
     String sdCardLocation;
-  public   boolean downloadCompete = true;
+    public boolean downloadCompete = true;
 
     public DecodeThread(Response<ResponseBody> response, Handler handler, String filename, String storageLocation) {
         this.fileName = filename;
@@ -44,10 +44,11 @@ public class DecodeThread extends Thread {
 
         InputStream input = null;
         try {
-            if (response != null)
-                input = response.body().byteStream();
-            else
+            if (response != null) {
+                    input = response.body().byteStream();
+            } else {
                 input = new ByteArrayInputStream(responseByte);
+            }
 
             File directory = new File(Environment.getExternalStorageDirectory() + sdCardLocation);
             if (!directory.exists()) {
@@ -71,7 +72,7 @@ public class DecodeThread extends Thread {
                     if (downloadCompete) {
                         handler.sendEmptyMessage(0);
                         Log.e("done decoding", "done decoding");
-                    }else {
+                    } else {
                         Log.e("interupted", "interupted");
                     }
 
@@ -87,7 +88,8 @@ public class DecodeThread extends Thread {
             e.printStackTrace();
         } finally {
             try {
-                input.close();
+                if (input != null)
+                    input.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

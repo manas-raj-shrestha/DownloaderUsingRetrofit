@@ -58,7 +58,6 @@ public class RetroDownloadService extends Service implements ProgressListener {
         @Override
         public boolean handleMessage(Message message) {
             if (!connectionTimeOut) {
-                Log.e("this called ", "this called");
                 downloadQueue.remove(HEAD_POSITION);
                 checkDownloadQueue();
             }
@@ -72,7 +71,6 @@ public class RetroDownloadService extends Service implements ProgressListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.intent = intent;
 
-        Log.e("service ", "started");
         if (intent != null) {
 
             connectionTimeOut = false;
@@ -99,16 +97,8 @@ public class RetroDownloadService extends Service implements ProgressListener {
                 downloadQueue.clear();
                 downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
 
-                if (intent.hasExtra("key")) {
-                    Log.e("has extra", "has extra");
-                } else {
-                    Log.e("no extra", "no extra");
-                }
-
                 currentDownload = 0;
                 totalQueueItems = downloadQueue.size();
-
-                Log.e("total que", " " + String.valueOf(totalQueueItems));
 
                 createNotification();
                 connectionTimeOut = false;
@@ -152,9 +142,16 @@ public class RetroDownloadService extends Service implements ProgressListener {
 
             @Override
             public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
-                decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
-                Log.e("success", fileName);
-                decodeThread.start();
+
+                if (response.body() == null) {
+                    Log.e("----", "response null");
+                    onFailure(new Throwable());
+                } else {
+                    decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
+                    Log.e("success", fileName);
+                    decodeThread.start();
+                }
+
             }
 
             @Override
@@ -164,11 +161,12 @@ public class RetroDownloadService extends Service implements ProgressListener {
                 intent.putExtra("key", false);
                 intent.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadQueue);
 
-                PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, 0);
+                PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
                 notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
                 notificationBuilder.setContentIntent(pIntent);
 
-                updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
+                updateNotification("File Not Found", 0, false, 0);
             }
         }, fileName);
     }
@@ -224,12 +222,10 @@ public class RetroDownloadService extends Service implements ProgressListener {
             intent.putExtra("key", false);
 
             intent.putParcelableArrayListExtra(KEY_DOWNLOAD_LIST, downloadQueue);
-            Log.e("Download Queue Size", String.valueOf(downloadQueue.size()) + "  " + intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST).size());
 
             PendingIntent pIntent = PendingIntent.getService(RetroDownloadService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
             notificationBuilder.setContentIntent(pIntent);
-            Log.e("problem here", "***** " + downloadQueue.size());
 
             updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
         }

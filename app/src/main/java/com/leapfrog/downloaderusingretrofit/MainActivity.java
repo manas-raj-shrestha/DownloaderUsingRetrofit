@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 createDummyList();
-                Intent intent = new Intent(MainActivity.this, RetroDownloadService.class);
+                Intent intent = new Intent(MainActivity.this, LoopJDownloadService.class);
                 intent.putParcelableArrayListExtra(RetroDownloadService.KEY_DOWNLOAD_LIST, downloadModels);
                 startService(intent);
 
@@ -40,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
         downloadModels.clear();
         downloadModels.add(new DownloadModel("short clip", "java1.mp4", "/appdata"));
         downloadModels.add(new DownloadModel("short clip", "java2.mp4", "/appdata"));
+        downloadModels.add(new DownloadModel("short clip", "java3.mp4", "/appdata"));
+        downloadModels.add(new DownloadModel("short clip", "java4.mp4", "/appdata"));
+        downloadModels.add(new DownloadModel("short clip", "java5.mp4", "/appdata"));
+        downloadModels.add(new DownloadModel("short clip", "java6.mp4", "/appdata"));
     }
 
 }

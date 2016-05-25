@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.StatFs;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -47,6 +48,7 @@ public class LoopJDownloadService extends Service {
 
     private ArrayList<DownloadModel> downloadQueue = new ArrayList<>();
     private ArrayList<Integer> progressList = new ArrayList<>();
+    AsyncHttpClient client = new AsyncHttpClient();
 
     /**
      * Handler to know when a file is finished decoding
@@ -72,8 +74,6 @@ public class LoopJDownloadService extends Service {
             handleCommand(intent);
         }
 
-//        RetrofitManager.getInstance().setProgressListener(this);
-
         return START_STICKY;
     }
 
@@ -82,14 +82,21 @@ public class LoopJDownloadService extends Service {
      *
      * @param intent {@link Intent}
      */
-    private void handleCommand(Intent intent) {
+    private void handleCommand(final Intent intent) {
 
+//        client.cancelRequests(LoopJDownloadService.this, true);
+        if (client != null) {
+            client.getHttpClient().getConnectionManager().shutdown();
+            client = new AsyncHttpClient();
+        }
+        currentDownload = 0;
         downloadQueue = intent.getParcelableArrayListExtra(KEY_DOWNLOAD_LIST);
         totalQueueItems = downloadQueue.size();
 
         createNotification();
         if (checkDiskSize() < MINIMUM_STORAGE_REQUIREMENT) {
-            PendingIntent pIntent = PendingIntent.getService(this, 0, intent, 0);
+            PendingIntent pIntent = PendingIntent.getService(LoopJDownloadService.this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
             notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
             notificationBuilder.setContentIntent(pIntent);
 
@@ -97,6 +104,14 @@ public class LoopJDownloadService extends Service {
         } else {
             checkDownloadQueue();
         }
+//
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//
+//            }
+//        }, 800);
 
     }
 
@@ -113,6 +128,8 @@ public class LoopJDownloadService extends Service {
         updateNotification("", Notification.FLAG_NO_CLEAR, false, 0);
     }
 
+    DecodeThread decodeThread;
+
     /**
      * Method to start download using retrofit
      *
@@ -120,7 +137,6 @@ public class LoopJDownloadService extends Service {
      */
     public void startRetrofitDownload(final String fileName, final String sdCardLocation) {
 
-        AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://10.10.11.112:8000/" + fileName, new AsyncHttpResponseHandler() {
 
             @Override
@@ -131,24 +147,44 @@ public class LoopJDownloadService extends Service {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 // called when response HTTP status is "200 OK"
-                DecodeThread decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
+                decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
                 decodeThread.start();
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
                 // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-                PendingIntent pIntent = PendingIntent.getService(LoopJDownloadService.this, 0, intent, 0);
+                Log.e("status code", String.valueOf(statusCode));
+                PendingIntent pIntent = PendingIntent.getService(LoopJDownloadService.this, 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+                String message;
+                if (statusCode == 404) {
+                    message = "File Not Found";
+                } else {
+                    message = MSG_DOWNLOAD_FAILED;
+                }
+
                 notificationBuilder.addAction(android.R.drawable.sym_action_chat, MSG_RETRY, pIntent);
                 notificationBuilder.setContentIntent(pIntent);
 
-                updateNotification(MSG_DOWNLOAD_FAILED, 0, false, 0);
+                updateNotification(message, 0, false, 0);
+
+                if (decodeThread != null) {
+                    decodeThread.downloadCompete = false;
+                }
             }
 
             @Override
             public void onRetry(int retryNo) {
                 // called when request is retried
             }
+
+            @Override
+            public void onCancel() {
+                super.onCancel();
+                Log.e("canceled", fileName);
+            }
+
 
             @Override
             public void onProgress(long bytesWritten, long totalSize) {
@@ -163,19 +199,7 @@ public class LoopJDownloadService extends Service {
                 }
             }
         });
-//        RetrofitManager.getInstance().getThumb(new Callback<ResponseBody>() {
-//
-//            @Override
-//            public void onResponse(retrofit.Response<ResponseBody> response, Retrofit retrofit) {
-//                DecodeThread decodeThread = new DecodeThread(response, handler, fileName, sdCardLocation);
-//                decodeThread.start();
-//            }
-//
-//            @Override
-//            public void onFailure(Throwable t) {
 
-//            }
-//        }, fileName);
     }
 
     /**
